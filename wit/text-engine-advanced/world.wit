@@ -1,0 +1,22 @@
+package docs:text-engine-advanced@0.1.0;
+
+interface processor {
+    record text-request {
+        content: string,
+        mode: string,
+    }
+
+    variant text-error {
+        invalid-utf8(string),
+        empty-input,
+        unknown-mode(string),
+    }
+
+    process-string: func(input: string) -> string;
+    process-record: func(req: text-request) -> result<string, text-error>;
+    process-bytes:  func(data: list<u8>)  -> result<string, text-error>;
+}
+
+world text-engine-advanced {
+    export processor;
+}

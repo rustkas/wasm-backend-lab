@@ -1,0 +1,7 @@
+package docs:text-engine-secure@0.1.0;
+interface processor {
+    read-file: func(path: string) -> result<string, string>;
+}
+world text-engine-secure {
+    export processor;
+}

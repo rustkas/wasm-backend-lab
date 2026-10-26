@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Глава 21 — Managed Runtime</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; padding: 2rem; display: flex; justify-content: center; }
+  .container { max-width: 800px; width: 100%; }
+  h1 { text-align: center; color: #38bdf8; }
+  .panel { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+  button { background: #38bdf8; color: #0c1222; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold; }
+  button:hover { background: #0ea5e9; }
+  pre { background: #000; padding: 1rem; border-radius: 4px; color: #22c55e; overflow-x: auto; }
+  .flex { display: flex; gap: 1rem; }
+  .flex > * { flex: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Managed Runtime Platform</h1>
+  
+  <div class="panel">
+    <h3>1. Invoke Component</h3>
+    <div class="flex">
+      <input id="input" type="text" value="hello world" style="padding:0.5rem; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:4px;">
+      <button onclick="invoke()">Invoke</button>
+    </div>
+    <pre id="res">-</pre>
+  </div>
+
+  <div class="panel">
+    <h3>2. Lifecycle: Hot-Swap</h3>
+    <p>Атомарно заменить работающий компонент на версию 2.</p>
+    <button onclick="swap()">Hot-Swap to v2</button>
+    <pre id="swap-res">-</pre>
+  </div>
+
+  <div class="panel">
+    <h3>3. Observability</h3>
+    <p>Метрики доступны в формате Prometheus: <a href="/metrics" target="_blank" style="color:#38bdf8;">/metrics</a></p>
+  </div>
+</div>
+
+<script>
+async function invoke() {
+  const res = document.getElementById('res');
+  const input = document.getElementById('input').value;
+  res.textContent = 'Loading...';
+  try {
+    const req = await fetch('/api/invoke', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ input }) });
+    const data = await req.json();
+    res.textContent = data.result || data.error;
+  } catch(e) { res.textContent = 'Error: ' + e; }
+}
+
+async function swap() {
+  const res = document.getElementById('swap-res');
+  res.textContent = 'Swapping...';
+  try {
+    const req = await fetch('/api/swap', { method: 'POST' });
+    const data = await req.json();
+    res.textContent = data.result || data.error;
+  } catch(e) { res.textContent = 'Error: ' + e; }
+}
+</script>
+</body>
+</html>

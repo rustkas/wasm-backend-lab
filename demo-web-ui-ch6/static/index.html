@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Ch6: Data Boundary</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --br:#334155; --tx:#e2e8f0;
+          --mu:#94a3b8; --ac:#38bdf8; --ok:#22c55e; --er:#ef4444;
+          --mo:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:var(--bg);color:var(--tx);min-height:100vh;
+       display:flex;align-items:center;justify-content:center;padding:2rem}
+  .box{max-width:880px;width:100%;background:var(--panel);
+       border:1px solid var(--br);border-radius:12px;padding:2rem;
+       box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  h1{font-size:1.6rem;font-weight:600;text-align:center;margin-bottom:.35rem;
+     background:linear-gradient(135deg,var(--ac),#a78bfa);
+     -webkit-background-clip:text; background-clip:text;
+     -webkit-text-fill-color:transparent}
+  .sub{color:var(--mu);text-align:center;font-size:.9rem;margin-bottom:2rem}
+  .sub code{font-family:var(--mo);background:rgba(255,255,255,.05);
+            padding:.1rem .35rem;border-radius:4px;color:var(--ac)}
+  .tabs{display:flex;gap:.4rem;border-bottom:1px solid var(--br);
+        padding-bottom:.5rem;margin-bottom:1.25rem}
+  .tab{padding:.55rem 1rem;border-radius:8px;cursor:pointer;
+       background:transparent;color:var(--mu);border:1px solid var(--br);
+       font-family:var(--mo);font-size:.82rem;transition:.15s}
+  .tab:hover{color:var(--tx)}
+  .tab.active{background:var(--ac);color:#0c1222;border-color:var(--ac);font-weight:600}
+  .panel{display:none}
+  .panel.active{display:block}
+  label{display:block;font-size:.75rem;font-weight:500;color:var(--mu);
+        text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem;margin-top:.75rem}
+  textarea,input[type=text]{width:100%;padding:.8rem;font-family:var(--mo);
+        font-size:.9rem;background:var(--bg);color:var(--tx);
+        border:1px solid var(--br);border-radius:8px;outline:none;transition:.15s}
+  textarea{min-height:90px;resize:vertical}
+  textarea:focus,input[type=text]:focus{border-color:var(--ac)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+  .actions{display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap}
+  button{padding:.65rem 1.15rem;font-size:.88rem;font-weight:500;border:none;
+         border-radius:8px;cursor:pointer;transition:.15s}
+  button.primary{background:var(--ac);color:#0c1222}
+  button.primary:hover{background:#0ea5e9}
+  button.primary:disabled{opacity:.5;cursor:wait}
+  button.danger{background:var(--er);color:#fff}
+  button.danger:hover{background:#dc2626}
+  .result{margin-top:1.25rem;padding:1rem;background:var(--bg);
+          border:1px solid var(--br);border-radius:8px;min-height:70px}
+  .result-label{display:flex;justify-content:space-between;
+                font-size:.72rem;color:var(--mu);
+                text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+  .result-body{font-family:var(--mo);font-size:.9rem;
+               white-space:pre-wrap;word-break:break-word;color:var(--mu)}
+  .result-body.ok{color:var(--ok)}
+  .result-body.er{color:var(--er)}
+  .timing{color:var(--ac);font-family:var(--mo);font-size:.75rem}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Data Boundary: String · Record · Bytes</h1>
+  <p class="sub">Passes values through <code>text-engine-advanced.wasm</code> · WIT types & errors</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="string">String</button>
+    <button class="tab" data-tab="record">Record</button>
+    <button class="tab" data-tab="bytes">Bytes (list&lt;u8&gt;)</button>
+  </div>
+
+  <div class="panel active" id="panel-string">
+    <label>Input (string)</label>
+    <textarea id="s-in">  Hello   String  </textarea>
+    <div class="actions">
+      <button class="primary" onclick="runString()">Process → string</button>
+    </div>
+    <div class="result">
+      <div class="result-label"><span>Result</span><span class="timing" id="s-t"></span></div>
+      <div class="result-body" id="s-out">Ready.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-record">
+    <div class="row">
+      <div>
+        <label>Content</label>
+        <input type="text" id="r-content" value="  Hello Record  ">
+      </div>
+      <div>
+        <label>Mode (upper / lower / normalize)</label>
+        <input type="text" id="r-mode" value="upper">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="runRecord()">Process → result&lt;string, text-error&gt;</button>
+      <button class="danger" onclick="runRecordBad()">Send unknown mode</button>
+    </div>
+    <div class="result">
+      <div class="result-label"><span>Result</span><span class="timing" id="r-t"></span></div>
+      <div class="result-body" id="r-out">Ready.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-bytes">
+    <label>Input string (converted to UTF-8 bytes in browser)</label>
+    <input type="text" id="b-in" value="Hello Bytes">
+    <div class="actions">
+      <button class="primary" onclick="runBytes(false)">Process → valid UTF-8</button>
+      <button class="danger" onclick="runBytes(true)">Send invalid UTF-8 (0xFF 0xFE 0xFD)</button>
+    </div>
+    <div class="result">
+      <div class="result-label"><span>Result</span><span class="timing" id="b-t"></span></div>
+      <div class="result-body" id="b-out">Ready.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+});
+
+async function post(url, body) {
+  const t0 = performance.now();
+  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'},
+                                body: JSON.stringify(body) });
+  const data = await r.json();
+  return { data, ms: performance.now() - t0 };
+}
+
+function show(outEl, timingEl, r) {
+  timingEl.textContent = 'round-trip: ' + r.ms.toFixed(2) + ' ms';
+  if (r.data.error) {
+    outEl.className = 'result-body er';
+    outEl.textContent = 'Error [' + (r.data.kind || r.data.error) + ']: ' + (r.data.reason || '');
+  } else {
+    outEl.className = 'result-body ok';
+    outEl.textContent = r.data.output === '' ? '(empty string)' : r.data.output;
+  }
+}
+
+async function runString() {
+  const o = document.getElementById('s-out'), t = document.getElementById('s-t');
+  o.textContent = 'Calling…';
+  try { show(o, t, await post('/string', { input: document.getElementById('s-in').value })); }
+  catch(e) { o.className='result-body er'; o.textContent = e; }
+}
+
+async function runRecord() {
+  const o = document.getElementById('r-out'), t = document.getElementById('r-t');
+  o.textContent = 'Calling…';
+  try { show(o, t, await post('/record', {
+    content: document.getElementById('r-content').value,
+    mode:    document.getElementById('r-mode').value
+  })); } catch(e) { o.className='result-body er'; o.textContent = e; }
+}
+
+async function runRecordBad() {
+  document.getElementById('r-mode').value = 'bogus_mode';
+  await runRecord();
+}
+
+async function runBytes(invalid) {
+  const o = document.getElementById('b-out'), t = document.getElementById('b-t');
+  o.textContent = 'Calling…';
+  const bytes = invalid
+    ? [255, 254, 253]
+    : Array.from(new TextEncoder().encode(document.getElementById('b-in').value));
+  try { show(o, t, await post('/bytes', { bytes })); }
+  catch(e) { o.className='result-body err'; o.textContent = e; }
+}
+</script>
+</body>
+</html>

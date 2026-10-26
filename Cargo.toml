@@ -1,0 +1,30 @@
+[workspace]
+resolver = "2"
+members = ["comparison/native", "host", "components/*", "demo-web-ui", "demo-web-ui-ch6", "demo-web-ui-ch7", "demo-web-ui-ch8", "demo-web-ui-ch9", "demo-web-ui-ch10", "demo-web-ui-ch11", "demo-web-ui-ch12", "demo-web-ui-ch13", "demo-web-ui-ch14", "demo-web-ui-ch15", "demo-web-ui-ch16", "demo-web-ui-ch17", "demo-web-ui-ch18", "demo-web-ui-ch19", "demo-web-ui-ch20",
+    "demo-web-ui-ch21",
+    "demo-web-ui-ch22",
+]
+exclude = ["components/text-engine-component", "components/document-engine",
+    "components/text-engine-advanced",
+    "components/text-engine-stateful",
+    "components/text-engine-hang",
+    "components/text-engine-secure",
+    "components/text-engine-memory",
+    "components/text-engine-crash",
+    "components/text-engine-observe",
+    "components/text-engine-resource",
+    "components/text-engine-stream",
+    "components/text-engine-v2",
+    "components/text-engine-slow-v1",
+    "components/text-engine-slow-v2",
+    "components/text-engine-deployable",
+    "components/text-engine-upper",
+    "components/text-engine-prefix",
+    "components/text-engine-independent",
+    "components/managed-runtime-v1",
+    "components/managed-runtime-v2",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"

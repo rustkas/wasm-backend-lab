@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Ch10: Memory Limits</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --br:#334155; --tx:#e2e8f0;
+          --mu:#94a3b8; --ac:#38bdf8; --ok:#22c55e; --er:#ef4444;
+          --mo:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:var(--bg);color:var(--tx);min-height:100vh;
+       display:flex;align-items:center;justify-content:center;padding:2rem}
+  .box{max-width:800px;width:100%;background:var(--panel);
+       border:1px solid var(--br);border-radius:12px;padding:2rem;
+       box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  h1{font-size:1.6rem;font-weight:600;text-align:center;margin-bottom:.35rem;
+     background:linear-gradient(135deg,var(--ac),#a78bfa);
+     -webkit-background-clip:text; background-clip:text;
+     -webkit-text-fill-color:transparent}
+  .sub{color:var(--mu);text-align:center;font-size:.9rem;margin-bottom:2rem}
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .panel { background: var(--bg); border: 1px solid var(--br); border-radius: 8px; padding: 1.25rem; text-align: center; display: flex; flex-direction: column; }
+  h2 { font-size: .9rem; font-weight: 600; margin-bottom: .5rem; color: var(--ac); }
+  .desc { font-size: .75rem; color: var(--mu); margin-bottom: 1rem; flex-grow: 1; }
+  button { padding: .6rem 1rem; font-size: .85rem; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; transition: .15s; width: 100%; }
+  button.good { background: var(--ac); color: #0c1222; }
+  button.bad { background: var(--er); color: white; }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { opacity: .5; cursor: wait; }
+  .result { margin-top: 1rem; font-family: var(--mo); font-size: .75rem; word-break: break-all; min-height: 40px; }
+  .res-ok { color: var(--ok); }
+  .res-err { color: var(--er); }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Memory Limits: StoreLimits</h1>
+  <p class="sub">WASM component attempts to allocate memory</p>
+  <div class="grid">
+    <div class="panel">
+      <h2>Safe Allocation</h2>
+      <p class="desc">Try to allocate 32 MB.<br>Limit is set to 64 MB.</p>
+      <button class="good" onclick="run('/small', 'out-small')">Allocate 32 MB</button>
+      <div class="result" id="out-small"></div>
+    </div>
+    <div class="panel">
+      <h2>Dangerous Allocation (OOM)</h2>
+      <p class="desc">Try to allocate 128 MB.<br>Exceeds the 64 MB limit.</p>
+      <button class="bad" onclick="run('/big', 'out-big')">Allocate 128 MB</button>
+      <div class="result" id="out-big"></div>
+    </div>
+  </div>
+</div>
+<script>
+async function run(url, outId) {
+  const out = document.getElementById(outId);
+  out.innerHTML = 'Allocating...'; out.className = 'result';
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  try {
+    const res = await fetch(url, { method: 'POST' });
+    const data = await res.json();
+    if (data.error) {
+      out.innerHTML = `<span class="res-err">${data.error}</span>`;
+    } else {
+      out.innerHTML = `<span class="res-ok">${data.output}</span>`;
+    }
+  } catch (e) {
+    out.innerHTML = `<span class="res-err">Network error: ${e}</span>`;
+  } finally {
+    document.querySelectorAll('button').forEach(b => b.disabled = false);
+  }
+}
+</script>
+</body>
+</html>

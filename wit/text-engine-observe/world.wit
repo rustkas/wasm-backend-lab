@@ -1,0 +1,7 @@
+package docs:text-engine-observe@0.1.0;
+interface processor {
+    process: func(input: string) -> string;
+}
+world text-engine-observe {
+    export processor;
+}

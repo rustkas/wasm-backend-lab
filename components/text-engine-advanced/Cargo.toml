@@ -1,0 +1,13 @@
+[package]
+name = "text-engine-advanced"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+text-engine = { path = "../text-engine" }
+wit-bindgen = "0.63"

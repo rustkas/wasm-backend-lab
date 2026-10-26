@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Ch15: Replaceability</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --br:#334155; --tx:#e2e8f0; --mu:#94a3b8; --ac:#38bdf8; --ok:#22c55e; --er:#ef4444; --wr:#f59e0b; --mo:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg);color:var(--tx);min-height:100vh; display:flex;align-items:center;justify-content:center;padding:2rem}
+  .box{max-width:800px;width:100%;background:var(--panel); border:1px solid var(--br);border-radius:12px;padding:2rem; box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  h1{font-size:1.6rem;font-weight:600;text-align:center;margin-bottom:.35rem; background:linear-gradient(135deg,var(--ac),#a78bfa); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+  .sub{color:var(--mu);text-align:center;font-size:.9rem;margin-bottom:2rem}
+  .versions { display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem; }
+  .v-btn { padding: 0.8rem 1.5rem; border-radius: 8px; border: 2px solid var(--br); background: transparent; color: var(--tx); font-weight: 600; cursor: pointer; transition: 0.15s; }
+  .v-btn.active { border-color: var(--ac); background: rgba(56,189,248,0.1); color: var(--ac); }
+  .input-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+  input[type=text] { flex-grow: 1; padding: .8rem; background: var(--bg); border: 1px solid var(--br); color: var(--tx); border-radius: 8px; font-family: var(--mo); }
+  button.process { padding: .8rem 1.5rem; background: var(--ac); color: #0c1222; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  .result { background: #000; border-radius: 8px; padding: 1.5rem; font-family: var(--mo); font-size: 1rem; color: var(--ok); min-height: 60px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Component Replaceability</h1>
+  <p class="sub">Switch between v1 and v2 without restarting the server</p>
+
+  <div class="versions">
+    <button class="v-btn active" id="btn-v1" onclick="switchVersion(1)">Version 1 (Lowercase)</button>
+    <button class="v-btn" id="btn-v2" onclick="switchVersion(2)">Version 2 (Uppercase)</button>
+  </div>
+
+  <div class="input-row">
+    <input type="text" id="input" value="Hello WASM">
+    <button class="process" onclick="run()">Process</button>
+  </div>
+
+  <div class="result" id="out">Result will appear here...</div>
+</div>
+<script>
+async function switchVersion(v) {
+  await fetch(`/switch/${v}`, { method: 'POST' });
+  document.getElementById('btn-v1').classList.toggle('active', v === 1);
+  document.getElementById('btn-v2').classList.toggle('active', v === 2);
+}
+
+async function run() {
+  const out = document.getElementById('out');
+  out.textContent = 'Processing...';
+  try {
+    const res = await fetch('/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input: document.getElementById('input').value })
+    });
+    const data = await res.json();
+    if (data.error) { out.textContent = 'Error: ' + data.error; }
+    else { out.textContent = data.output; }
+  } catch(e) { out.textContent = 'Network error: ' + e; }
+}
+</script>
+</body>
+</html>

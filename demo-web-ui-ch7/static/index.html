@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Ch7: State Model</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --br:#334155; --tx:#e2e8f0;
+          --mu:#94a3b8; --ac:#38bdf8; --ok:#22c55e; --er:#ef4444;
+          --mo:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:var(--bg);color:var(--tx);min-height:100vh;
+       display:flex;align-items:center;justify-content:center;padding:2rem}
+  .box{max-width:900px;width:100%;background:var(--panel);
+       border:1px solid var(--br);border-radius:12px;padding:2rem;
+       box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  h1{font-size:1.6rem;font-weight:600;text-align:center;margin-bottom:.35rem;
+     background:linear-gradient(135deg,var(--ac),#a78bfa);
+     -webkit-background-clip:text; background-clip:text;
+     -webkit-text-fill-color:transparent}
+  .sub{color:var(--mu);text-align:center;font-size:.9rem;margin-bottom:2rem}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+  .panel{background:var(--bg);border:1px solid var(--br);border-radius:8px;padding:1.25rem}
+  h2{font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--ac);text-align:center}
+  .val{font-size:2.5rem;font-family:var(--mo);text-align:center;margin:1rem 0;color:var(--ok)}
+  .actions{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
+  button{padding:.6rem 1rem;font-size:.85rem;font-weight:500;border:none;
+         border-radius:6px;cursor:pointer;transition:.15s}
+  button.primary{background:var(--ac);color:#0c1222}
+  button.primary:hover{background:#0ea5e9}
+  button.secondary{background:transparent;color:var(--mu);border:1px solid var(--br)}
+  button.secondary:hover{color:var(--tx);border-color:var(--ac)}
+  .note{margin-top:1.5rem;padding:1rem;background:rgba(56,189,248,0.1);
+        border-left:3px solid var(--ac);border-radius:4px;font-size:.85rem;color:var(--mu)}
+  code{font-family:var(--mo);background:rgba(255,255,255,0.05);padding:.1rem .3rem;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>State: Operational Model</h1>
+  <p class="sub">Store lifecycle and WASM linear memory</p>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Stateless</h2>
+      <p style="font-size:.75rem;color:var(--mu);text-align:center;margin-bottom:.5rem">
+        New <code>Store</code> per request
+      </p>
+      <div class="val" id="s-val">0</div>
+      <div class="actions">
+        <button class="primary" onclick="incStateless()">Increment</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Stateful</h2>
+      <p style="font-size:.75rem;color:var(--mu);text-align:center;margin-bottom:.5rem">
+        Shared <code>Store</code> behind <code>Mutex</code>
+      </p>
+      <div class="val" id="st-val">0</div>
+      <div class="actions">
+        <button class="primary" onclick="incStateful()">Increment</button>
+        <button class="secondary" onclick="resetStateful()">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Why this matters:</b> The stateless panel always returns 1 because each call creates a fresh
+    <code>Store</code> and instantiates the component from scratch. WASM memory is wiped. The stateful
+    panel keeps the <code>Store</code> alive, so the atomic counter inside the component's linear memory
+    survives between HTTP requests.
+  </div>
+</div>
+
+<script>
+async function post(url) {
+  const r = await fetch(url, { method: 'POST' });
+  return await r.json();
+}
+async function get(url) {
+  const r = await fetch(url);
+  return await r.json();
+}
+
+async function incStateless() {
+  const data = await post('/stateless/increment');
+  document.getElementById('s-val').textContent = data.value ?? 'err';
+}
+
+async function incStateful() {
+  const data = await post('/stateful/increment');
+  document.getElementById('st-val').textContent = data.value ?? 'err';
+}
+
+async function resetStateful() {
+  await post('/stateful/reset');
+  const data = await get('/stateful/get');
+  document.getElementById('st-val').textContent = data.value ?? 'err';
+}
+
+// Initial fetch
+get('/stateful/get').then(d => {
+  if (d.value !== undefined) document.getElementById('st-val').textContent = d.value;
+});
+</script>
+</body>
+</html>

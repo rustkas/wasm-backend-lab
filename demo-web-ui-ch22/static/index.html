@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Глава 22 — Ready для Production?</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --br:#334155; --tx:#e2e8f0; --mu:#94a3b8; --ac:#38bdf8; --ok:#22c55e; --er:#ef4444; --mo:ui-monospace,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;padding:2rem;display:flex;justify-content:center;}
+  .container{max-width:1100px;width:100%}
+  h1{font-size:1.8rem;font-weight:600;text-align:center;margin-bottom:.35rem;background:linear-gradient(135deg,var(--ac),#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{color:var(--mu);text-align:center;font-size:1rem;margin-bottom:2rem}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:500px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--br);border-radius:10px;padding:1.25rem;display:flex;flex-direction:column;transition:transform .15s}
+  .card:hover{transform:translateY(-2px);border-color:var(--ac)}
+  h3{font-size:.9rem;color:var(--ac);margin-bottom:.5rem}
+  p{font-size:.75rem;color:var(--mu);margin-bottom:1rem;flex-grow:1;line-height:1.4}
+  button{padding:.6rem;border-radius:6px;border:1px solid var(--ac);font-weight:600;cursor:pointer;background:rgba(56,189,248,.1);color:var(--ac);transition:.15s;font-size:.8rem}
+  button:hover{background:var(--ac);color:#0c1222}
+  button:disabled{opacity:.5;cursor:wait}
+  .result{margin-top:.75rem;font-family:var(--mo);font-size:.7rem;color:var(--mu);background:#000;padding:.5rem;border-radius:4px;min-height:30px;word-break:break-all}
+  .res-ok{color:var(--ok)}
+  .res-err{color:var(--er)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Readiness Dashboard</h1>
+  <p class="sub">12 сценариев готовности для wasm-backend-lab</p>
+  <div class="grid">
+    <div class="card"><h3>1. Computational</h3><p>Pure function, no state.</p><button onclick="run(1,'r1')">Check</button><div class="result" id="r1">-</div></div>
+    <div class="card"><h3>2. Stateful</h3><p>State persists between calls.</p><button onclick="run(2,'r2')">Check</button><div class="result" id="r2">-</div></div>
+    <div class="card"><h3>3. Policy</h3><p>File access via capability.</p><button onclick="run(3,'r3')">Check</button><div class="result" id="r3">-</div></div>
+    <div class="card"><h3>4. Resource</h3><p>Object lifecycle via handle.</p><button onclick="run(4,'r4')">Check</button><div class="result" id="r4">-</div></div>
+    <div class="card"><h3>5. Pipeline</h3><p>Composition of components.</p><button onclick="run(5,'r5')">Check</button><div class="result" id="r5">-</div></div>
+    <div class="card"><h3>6. Hot-Swap</h3><p>Atomic replacement at runtime.</p><button onclick="run(6,'r6')">Check</button><div class="result" id="r6">-</div></div>
+    <div class="card"><h3>7. Admission</h3><p>Manifest validation before load.</p><button onclick="run(7,'r7')">Check</button><div class="result" id="r7">-</div></div>
+    <div class="card"><h3>8. Observability</h3><p>Metrics endpoint (Prometheus).</p><button onclick="run(8,'r8')">Check</button><div class="result" id="r8">-</div></div>
+    <div class="card"><h3>9. Error Handling</h3><p>Graceful failure on bad input.</p><button onclick="run(9,'r9')">Check</button><div class="result" id="r9">-</div></div>
+    <div class="card"><h3>10. Limits</h3><p>Fuel / epoch boundaries.</p><button onclick="run(10,'r10')">Check</button><div class="result" id="r10">-</div></div>
+    <div class="card"><h3>11. Isolation</h3><p>Memory isolation between stores.</p><button onclick="run(11,'r11')">Check</button><div class="result" id="r11">-</div></div>
+    <div class="card"><h3>12. Capability</h3><p>Deny access without capability.</p><button onclick="run(12,'r12')">Check</button><div class="result" id="r12">-</div></div>
+  </div>
+</div>
+<script>
+async function run(id, elId) {
+  const el = document.getElementById(elId);
+  el.textContent = 'Running...'; el.className = 'result';
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  try {
+    const res = await fetch(`/api/check/${id}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.pass) {
+      el.innerHTML = `<span class="res-ok">✅ ${data.detail}</span>`;
+    } else {
+      el.innerHTML = `<span class="res-err">❌ ${data.detail}</span>`;
+    }
+  } catch(e) {
+    el.innerHTML = `<span class="res-err">Error: ${e}</span>`;
+  } finally {
+    document.querySelectorAll('button').forEach(b => b.disabled = false);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+package docs:text-engine-stream@0.1.0;
+
+interface processor {
+    process-list: func(data: list<u8>) -> u32;
+
+    resource chunk-reader {
+        read-chunk: func() -> option<list<u8>>;
+    }
+    open-reader: func(total-size: u32) -> chunk-reader;
+}
+
+world text-engine-stream {
+    export processor;
+}

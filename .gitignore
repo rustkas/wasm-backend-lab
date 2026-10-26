@@ -1,0 +1,33 @@
+# Rust build artifacts
+/target
+**/target
+
+# Cargo lockfiles for components (we usually keep the workspace Cargo.lock)
+components/**/Cargo.lock
+
+# Wasm build outputs (handled by target/ but just in case)
+*.wasm
+!artifacts/**/*.wasm
+
+# Dynamic sandbox files created by Chapters 9 & 10
+/sandbox/
+host/sandbox/
+
+# Secret test files
+secret.txt
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.iml
+*.swp
+.DS_Store
+
+# Logs and temporary files
+*.log
+*.tmp
+tree.txt
+
+# Environment variables
+.env
+.env.local

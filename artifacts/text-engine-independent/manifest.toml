@@ -1,0 +1,4 @@
+name = "text-engine-independent"
+version = "1.0.0"
+hash = "sha256:dummyhash123"
+required_capabilities = ["fs:read"]

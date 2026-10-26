@@ -1,0 +1,7 @@
+package docs:text-engine-hang@0.1.0;
+interface processor {
+    process: func(iterations: u32) -> string;
+}
+world text-engine-hang {
+    export processor;
+}

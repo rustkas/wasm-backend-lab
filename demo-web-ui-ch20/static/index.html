@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Ch20: Design Patterns</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --br:#334155; --tx:#e2e8f0; --mu:#94a3b8; --ac:#38bdf8; --ok:#22c55e; --er:#ef4444; --mo:ui-monospace,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg);color:var(--tx); min-height:100vh; padding:2rem; display:flex; justify-content:center;}
+  .container { max-width: 1000px; width: 100%; }
+  h1{font-size:1.8rem;font-weight:600;text-align:center;margin-bottom:.35rem; background:linear-gradient(135deg,var(--ac),#a78bfa); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+  .sub{color:var(--mu);text-align:center;font-size:1rem;margin-bottom:2rem}
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  @media (max-width: 800px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--br); border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; transition: transform .15s; }
+  .card:hover { transform: translateY(-2px); border-color: var(--ac); }
+  h3 { font-size: 0.95rem; color: var(--ac); margin-bottom: .5rem; }
+  p { font-size: 0.75rem; color: var(--mu); margin-bottom: 1rem; flex-grow: 1; line-height: 1.4; }
+  button { padding: .6rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; background: rgba(56,189,248,0.1); color: var(--ac); border: 1px solid var(--ac); transition: .15s; font-size: 0.8rem; }
+  button:hover { background: var(--ac); color: #0c1222; }
+  button:disabled { opacity: .5; cursor: wait; }
+  .result { margin-top: .75rem; font-family: var(--mo); font-size: 0.7rem; color: var(--mu); background: #000; padding: .5rem; border-radius: 4px; min-height: 30px; word-break: break-all; }
+  .res-ok { color: var(--ok); }
+  .res-err { color: var(--er); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Component Design Patterns</h1>
+  <p class="sub">8 architectural solutions in one place</p>
+  <div class="grid">
+    <div class="card"><h3>1. Computational</h3><p>Stateless input/output function. The simplest form of component.</p><button onclick="run('/pattern/computational', 'r1')">Run</button><div class="result" id="r1">-</div></div>
+    <div class="card"><h3>2. Plugin</h3><p>Dynamically select implementation (v2) based on configuration.</p><button onclick="run('/pattern/plugin', 'r2')">Run</button><div class="result" id="r2">-</div></div>
+    <div class="card"><h3>3. Stateful</h3><p>Persist state between calls (AtomicU32 counter).</p><button onclick="run('/pattern/stateful', 'r3')">Run</button><div class="result" id="r3">-</div></div>
+    <div class="card"><h3>4. Policy-Controlled</h3><p>Access resources only through explicit Capabilities (fs:read).</p><button onclick="run('/pattern/policy', 'r4')">Run</button><div class="result" id="r4">-</div></div>
+    <div class="card"><h3>5. Resource</h3><p>Manage lifecycle of an object (open/read/close) via handles.</p><button onclick="run('/pattern/resource', 'r5')">Run</button><div class="result" id="r5">-</div></div>
+    <div class="card"><h3>6. Pipeline</h3><p>Chain components (A → B) where output of one is input of another.</p><button onclick="run('/pattern/pipeline', 'r6')">Run</button><div class="result" id="r6">-</div></div>
+    <div class="card"><h3>7. Replaceable</h3><p>Hot-swap component version without restarting the server.</p><button onclick="run('/pattern/drain', 'r7')">Run</button><div class="result" id="r7">-</div></div>
+    <div class="card"><h3>8. Untrusted Extension</h3><p>Validate manifest (Admission Control) before loading third-party code.</p><button onclick="run('/pattern/untrusted', 'r8')">Run</button><div class="result" id="r8">-</div></div>
+  </div>
+</div>
+<script>
+async function run(url, id) {
+  const el = document.getElementById(id);
+  el.textContent = 'Running...'; el.className = 'result';
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  try {
+    const res = await fetch(url, { method: 'POST' });
+    const data = await res.json();
+    if (data.error) {
+      el.innerHTML = `<span class="res-err">${data.error}</span>`;
+    } else {
+      el.innerHTML = `<span class="res-ok">${data.result}</span>`;
+    }
+  } catch(e) {
+    el.innerHTML = `<span class="res-err">Error: ${e}</span>`;
+  } finally {
+    document.querySelectorAll('button').forEach(b => b.disabled = false);
+  }
+}
+</script>
+</body>
+</html>

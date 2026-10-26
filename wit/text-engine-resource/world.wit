@@ -1,0 +1,13 @@
+package docs:text-engine-resource@0.1.0;
+
+interface processor {
+    resource document {
+        get-content: func() -> string;
+        close: func();
+    }
+    open: func(name: string) -> result<document, string>;
+}
+
+world text-engine-resource {
+    export processor;
+}

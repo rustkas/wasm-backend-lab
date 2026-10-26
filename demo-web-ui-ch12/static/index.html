@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Ch12: Observability</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --br:#334155; --tx:#e2e8f0; --mu:#94a3b8; --ac:#38bdf8; --ok:#22c55e; --er:#ef4444; --wr:#f59e0b; --mo:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg);color:var(--tx);min-height:100vh; display:flex;align-items:center;justify-content:center;padding:2rem}
+  .box{max-width:900px;width:100%;background:var(--panel); border:1px solid var(--br);border-radius:12px;padding:2rem; box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  h1{font-size:1.6rem;font-weight:600;text-align:center;margin-bottom:.35rem; background:linear-gradient(135deg,var(--ac),#a78bfa); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+  .sub{color:var(--mu);text-align:center;font-size:.9rem;margin-bottom:2rem}
+  .input-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+  input[type=text] { flex-grow: 1; padding: .8rem; background: var(--bg); border: 1px solid var(--br); color: var(--tx); border-radius: 8px; font-family: var(--mo); }
+  button { padding: .8rem 1.5rem; background: var(--ac); color: #0c1222; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: .15s; }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { opacity: .5; cursor: wait; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .panel { background: var(--bg); border: 1px solid var(--br); border-radius: 8px; padding: 1.25rem; }
+  h2 { font-size: .85rem; font-weight: 600; margin-bottom: .5rem; color: var(--ac); text-transform: uppercase; letter-spacing: .05em; }
+  .logs { grid-column: span 2; background: #000; border-radius: 8px; padding: 1rem; font-family: var(--mo); font-size: .8rem; color: #a3e635; min-height: 120px; white-space: pre-wrap; }
+  .metric-val { font-family: var(--mo); font-size: 1.5rem; color: var(--ok); margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Observability: Logs & Metrics</h1>
+  <p class="sub">Capturing guest stdout and measuring execution time</p>
+
+  <div class="input-row">
+    <input type="text" id="input" value="  Hello   WASM  ">
+    <button id="btn" onclick="run()">Process</button>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Result</h2>
+      <div class="metric-val" id="out-result" style="font-size:1rem">-</div>
+    </div>
+    <div class="panel">
+      <h2>Metrics (Duration)</h2>
+      <div class="metric-val" id="out-metrics">-</div>
+    </div>
+    <div class="logs" id="out-logs">Awaiting guest logs...</div>
+  </div>
+</div>
+<script>
+async function run() {
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  document.getElementById('out-result').innerHTML = 'Processing...';
+  document.getElementById('out-metrics').innerHTML = '-';
+  document.getElementById('out-logs').innerHTML = 'Waiting...';
+
+  try {
+    const res = await fetch('/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input: document.getElementById('input').value })
+    });
+    const data = await res.json();
+    
+    if (data.error) {
+      document.getElementById('out-result').innerHTML = `<span style="color:var(--er)">Error</span>`;
+      document.getElementById('out-logs').innerHTML = data.error;
+    } else {
+      document.getElementById('out-result').textContent = data.output;
+      document.getElementById('out-metrics').textContent = `${data.metrics.duration_us} µs`;
+      document.getElementById('out-logs').textContent = data.logs || '(no logs)';
+    }
+  } catch (e) {
+    document.getElementById('out-logs').textContent = 'Network error: ' + e;
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

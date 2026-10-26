@@ -1,0 +1,14 @@
+package docs:document-engine@0.1.0;
+
+interface processor {
+    record document {
+        title: string,
+        content: string,
+    }
+
+    process: func(doc: document) -> string;
+}
+
+world document-engine {
+    export processor;
+}

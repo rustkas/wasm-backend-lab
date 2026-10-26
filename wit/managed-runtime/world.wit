@@ -1,0 +1,10 @@
+package docs:managed-runtime@0.1.0;
+
+interface processor {
+    process: func(input: string) -> result<string, string>;
+    get-version: func() -> string;
+}
+
+world managed-runtime {
+    export processor;
+}

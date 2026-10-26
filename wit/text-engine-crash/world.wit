@@ -1,0 +1,8 @@
+package docs:text-engine-crash@0.1.0;
+interface processor {
+    long-task: func(ms: u32) -> string;
+    crash: func() -> string;
+}
+world text-engine-crash {
+    export processor;
+}

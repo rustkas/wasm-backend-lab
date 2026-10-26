@@ -1,0 +1,10 @@
+[package]
+name = "demo-web-ui-ch8"
+version.workspace = true
+edition.workspace = true
+[dependencies]
+host = { path = "../host" }
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+anyhow = "1.0"

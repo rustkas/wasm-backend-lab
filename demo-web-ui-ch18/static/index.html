@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Ch18: Composition</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --br:#334155; --tx:#e2e8f0; --mu:#94a3b8; --ac:#38bdf8; --ok:#22c55e; --er:#ef4444; --wr:#f59e0b; --mo:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg);color:var(--tx);min-height:100vh; display:flex;align-items:center;justify-content:center;padding:2rem}
+  .box{max-width:900px;width:100%;background:var(--panel); border:1px solid var(--br);border-radius:12px;padding:2rem; box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  h1{font-size:1.6rem;font-weight:600;text-align:center;margin-bottom:.35rem; background:linear-gradient(135deg,var(--ac),#a78bfa); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+  .sub{color:var(--mu);text-align:center;font-size:.9rem;margin-bottom:2rem}
+  
+  .pipeline { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; background: var(--bg); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--br); }
+  .step-box { text-align: center; flex: 1; }
+  select { padding: .6rem; border-radius: 6px; background: var(--panel); border: 1px solid var(--br); color: var(--tx); font-family: var(--mo); font-size: 1rem; width: 150px; }
+  .arrow { font-size: 2rem; color: var(--mu); margin: 0 1rem; }
+  
+  .input-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+  input[type=text] { flex-grow: 1; padding: .8rem; background: var(--bg); border: 1px solid var(--br); color: var(--tx); border-radius: 8px; font-family: var(--mo); }
+  button { padding: .8rem 1.5rem; background: var(--ac); color: #0c1222; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { opacity: .5; cursor: wait; }
+  
+  .result { background: #000; border-radius: 8px; padding: 1.5rem; font-family: var(--mo); font-size: 1rem; color: var(--ok); min-height: 60px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Host Orchestration Pipeline</h1>
+  <p class="sub">Chain two components together (A -> B)</p>
+
+  <div class="pipeline">
+    <div class="step-box">
+      <div style="font-size:.8rem;color:var(--mu);margin-bottom:.5rem">STEP 1</div>
+      <select id="step1">
+        <option value="upper">UpperCase</option>
+        <option value="prefix">Prefix</option>
+      </select>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step-box">
+      <div style="font-size:.8rem;color:var(--mu);margin-bottom:.5rem">STEP 2</div>
+      <select id="step2">
+        <option value="prefix">Prefix</option>
+        <option value="upper">UpperCase</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="input-row">
+    <input type="text" id="input" value="hello composition">
+    <button class="process" onclick="run()">Run Pipeline</button>
+  </div>
+
+  <div class="result" id="out">Result will appear here...</div>
+</div>
+<script>
+async function run() {
+  const out = document.getElementById('out');
+  out.textContent = 'Processing...';
+  try {
+    const res = await fetch('/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: document.getElementById('input').value,
+        step1: document.getElementById('step1').value,
+        step2: document.getElementById('step2').value
+      })
+    });
+    const data = await res.json();
+    if (data.error) { out.textContent = 'Error: ' + data.error; }
+    else { out.textContent = data.output; }
+  } catch(e) { out.textContent = 'Network error: ' + e; }
+}
+</script>
+</body>
+</html>

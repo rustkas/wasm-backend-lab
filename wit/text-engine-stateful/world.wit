@@ -1,0 +1,11 @@
+package docs:text-engine-stateful@0.1.0;
+
+interface processor {
+    increment: func() -> u32;
+    get: func() -> u32;
+    reset: func();
+}
+
+world text-engine-stateful {
+    export processor;
+}

@@ -1,0 +1,7 @@
+package docs:text-engine-memory@0.1.0;
+interface processor {
+    allocate: func(mb: u32) -> result<string, string>;
+}
+world text-engine-memory {
+    export processor;
+}

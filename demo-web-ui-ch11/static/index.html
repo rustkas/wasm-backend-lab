@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><title>Ch11: Cancellation & Failure</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --br:#334155; --tx:#e2e8f0; --mu:#94a3b8; --ac:#38bdf8; --ok:#22c55e; --er:#ef4444; --wr:#f59e0b; --mo:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg);color:var(--tx);min-height:100vh; display:flex;align-items:center;justify-content:center;padding:2rem}
+  .box{max-width:850px;width:100%;background:var(--panel); border:1px solid var(--br);border-radius:12px;padding:2rem; box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  h1{font-size:1.6rem;font-weight:600;text-align:center;margin-bottom:.35rem; background:linear-gradient(135deg,var(--ac),#a78bfa); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+  .sub{color:var(--mu);text-align:center;font-size:.9rem;margin-bottom:2rem}
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .panel { background: var(--bg); border: 1px solid var(--br); border-radius: 8px; padding: 1.25rem; text-align: center; }
+  h2 { font-size: .9rem; font-weight: 600; margin-bottom: .5rem; color: var(--ac); }
+  .desc { font-size: .75rem; color: var(--mu); margin-bottom: 1rem; }
+  button { padding: .6rem 1rem; font-size: .85rem; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; transition: .15s; width: 100%; margin-bottom: 0.5rem; }
+  button.primary { background: var(--ac); color: #0c1222; }
+  button.warn { background: var(--wr); color: #0c1222; }
+  button.bad { background: var(--er); color: white; }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { opacity: .5; cursor: wait; }
+  .result { margin-top: 1rem; font-family: var(--mo); font-size: .75rem; word-break: break-all; min-height: 40px; text-align: left; }
+  .res-ok { color: var(--ok); }
+  .res-err { color: var(--er); }
+  .log { background: #000; padding: 0.5rem; border-radius: 4px; height: 100px; overflow-y: auto; font-family: var(--mo); font-size: 0.7rem; color: var(--mu); margin-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Failure Semantics & Cancellation</h1>
+  <p class="sub">What dies when we cancel or crash?</p>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Cancellable Task</h2>
+      <p class="desc">Starts a 5s task. You can cancel it.</p>
+      <button class="primary" id="btn-start" onclick="startTask()">Start Task</button>
+      <button class="warn" id="btn-cancel" onclick="cancelTask()" disabled>Cancel Task</button>
+      <div class="result" id="res-task"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Guest Crash (Panic)</h2>
+      <p class="desc">Calls a function that panics inside WASM.</p>
+      <button class="bad" onclick="crashGuest()">Trigger Crash</button>
+      <div class="result" id="res-crash"></div>
+    </div>
+  </div>
+  
+  <div class="log" id="log">Server logs...</div>
+</div>
+
+<script>
+let currentTaskId = null;
+function log(msg) {
+  const l = document.getElementById('log');
+  l.innerHTML += `<div>> ${msg}</div>`;
+  l.scrollTop = l.scrollHeight;
+}
+
+async function startTask() {
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-cancel').disabled = false;
+  document.getElementById('res-task').innerHTML = 'Running 5s task...';
+  try {
+    const res = await fetch('/start', { method: 'POST' });
+    const data = await res.json();
+    currentTaskId = data.task_id;
+    log(`Started task ${currentTaskId}`);
+  } catch(e) {
+    log(`Error: ${e}`);
+    document.getElementById('btn-start').disabled = false;
+  }
+}
+
+async function cancelTask() {
+  if (!currentTaskId) return;
+  document.getElementById('btn-cancel').disabled = true;
+  try {
+    const res = await fetch(`/cancel/${currentTaskId}`, { method: 'POST' });
+    const data = await res.json();
+    document.getElementById('res-task').innerHTML = `<span class="res-err">Task Cancelled (Epoch Interrupt)</span>`;
+    log(`Sent cancel signal for ${currentTaskId}`);
+    document.getElementById('btn-start').disabled = false;
+    currentTaskId = null;
+  } catch(e) {
+    log(`Error: ${e}`);
+  }
+}
+
+async function crashGuest() {
+  document.getElementById('res-crash').innerHTML = 'Calling crash...';
+  try {
+    const res = await fetch('/crash', { method: 'POST' });
+    const data = await res.json();
+    if (data.error) {
+      document.getElementById('res-crash').innerHTML = `<span class="res-err">${data.error}</span>`;
+      log(`Guest crashed: ${data.error}`);
+    }
+  } catch(e) {
+    log(`Error: ${e}`);
+  }
+}
+</script>
+</body>
+</html>
